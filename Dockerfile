@@ -2,6 +2,11 @@ FROM centos:7
 
 ENV container docker
 
+
+# The package `systemd-sysv` and `initscripts`
+# are installed for providing backwards compatibility
+# with some services and they are also needed for functioning
+# of the `sshd-keygen` service.
 RUN yum -y install dnf \
     && dnf -y upgrade \
     && dnf -y install \
@@ -63,7 +68,7 @@ RUN rm -f /etc/init.d/net* /run/nologin /var/run/nologin \
     && echo -e "*** Welcome to interactive tty of full CentOS operating system running on docker! ***\n\nLogin: root\nPass: centos\n" > /etc/issue \
     && echo -e "\nHint: You can terminate the container by shutting the system down - run the 'halt' command\n" > /etc/motd
 
-HEALTHCHECK --interval=3s --timeout=30s --start-period=3s --retries=10 CMD ["/usr/bin/systemctl", "is-system-running", "--quiet"]
+HEALTHCHECK --interval=3s --timeout=2m --start-period=4s --retries=15 CMD ["/usr/bin/systemctl", "is-system-running", "--quiet"]
 
 VOLUME ["/sys/fs/cgroup", "/tmp"]
 
