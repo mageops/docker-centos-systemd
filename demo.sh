@@ -4,7 +4,7 @@ set -e
 
 echo " * Build container..."
 
-docker build . -t centos-systemd:7
+docker build . -t mageops/centos-systemd
 
 echo " * Run container..."
 
@@ -19,7 +19,7 @@ docker run \
     --publish 322:22 \
     --tmpfs /tmp:exec \
     --name centos-systemd \
-        centos-systemd:7
+        mageops/centos-systemd
 
 echo " * Wait until container is healthy..."
 
