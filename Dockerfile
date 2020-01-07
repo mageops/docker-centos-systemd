@@ -69,9 +69,13 @@ RUN rm -f /etc/init.d/net* /run/nologin /var/run/nologin \
     && echo -e "\nHint: You can terminate the container by shutting the system down - run the 'halt' command\n" > /etc/motd
 
 HEALTHCHECK --interval=3s --timeout=2m --start-period=4s --retries=15 CMD ["/usr/bin/systemctl", "is-system-running", "--quiet"]
+# This is the proper shutdown signal used by systemd init process
+# Vide: https://www.freedesktop.org/software/systemd/man/systemd.html#Signals
+STOPSIGNAL SIGRTMIN+4
 
 VOLUME ["/sys/fs/cgroup", "/tmp"]
 
 EXPOSE 22
+USER root
 
 CMD ["/sbin/init"]
