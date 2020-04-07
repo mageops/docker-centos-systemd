@@ -72,7 +72,7 @@ HEALTHCHECK --interval=3s --timeout=2m --start-period=4s --retries=15 CMD ["/usr
 # Vide: https://www.freedesktop.org/software/systemd/man/systemd.html#Signals
 STOPSIGNAL SIGRTMIN+4
 
-VOLUME ["/sys/fs/cgroup", "/tmp"]
+VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
 
 EXPOSE 22
 USER root
