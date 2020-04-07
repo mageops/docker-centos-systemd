@@ -30,6 +30,7 @@ while ! docker ps --filter name=centos-systemd --filter health=healthy --format 
 done
 
 echo " * SSH into the container..."
+echo -e "\n !!! Enter SSH password: centos !!! \n"
 
 unset SSH_AUTH_SOCK
 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@127.0.0.1 -p 322
