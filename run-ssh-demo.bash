@@ -15,9 +15,10 @@ docker run \
     --detach \
     --interactive \
     --tty \
-    --privileged \
     --publish 322:22 \
     --tmpfs /tmp:exec \
+    --tmpfs /run \
+    --volume /sys/fs/cgroup:/sys/fs/cgroup:ro \
     --name centos-systemd \
         mageops/centos-systemd
 

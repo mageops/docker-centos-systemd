@@ -29,17 +29,16 @@ RUN yum -y install dnf \
     && yum clean all
 
 # Modified version of: https://hub.docker.com/r/centos/systemd/dockerfile
-# Kept some of the files after esperimentation, especially removing everything in
-# `/lib/systemd/system/sysinit.target.wants/` breaks tons of stuff.
 RUN rm -f \
         /lib/systemd/system/sockets.target.wants/*udev* \
         /lib/systemd/system/sockets.target.wants/*initctl* \
-        /lib/systemd/system/anaconda.target.wants/* \
         /etc/systemd/system/*.wants/* \
-        /lib/systemd/system/sysinit.target.wants/systemd-udev-trigger.service \
-        /lib/systemd/system/sysinit.target.wants/systemd-udevd.service \
-    && systemctl disable systemd-vconsole-setup \
-    && systemctl disable systemd-udevd
+    && cp -r /lib/systemd/system/sockets.target.wants/ /etc/systemd/system/ \
+    && systemctl disable systemd-vconsole-setup.service \
+    && systemctl disable systemd-udevd.service \
+    && mkdir -p /etc/systemd/system/sys-fs-fuse-connections.mount.d/ \
+    && echo -e '[Unit]\nConditionPathExists=/sys/fs/fuse/connections\nConditionCapability=CAP_SYS_ADMIN\nConditionVirtualization=!private-users\n' > /etc/systemd/system/sys-fs-fuse-connections.mount.d/docker-virt.conf
+
 
 # The service `docker-ipv6-hosts-cleanup` removes IPv6 entries from `/etc/hosts`
 # so daemons (e.g. postfix) do not expect these interfaces to be available.
@@ -62,7 +61,7 @@ RUN rm -f /etc/init.d/net* /run/nologin /var/run/nologin \
     && sed -ri '0,/^#?\s*(RateLimitInterval)\s*=\s*.*$/s//\1=10s/' /etc/systemd/journald.conf \
     && sed -ri '0,/^#?\s*(RateLimitBurst)\s*=\s*.*$/s//\1=100/' /etc/systemd/journald.conf \
     && sed -ri '0,/^#?\s*(MaxRetentionSec)\s*=\s*.*$/s//\1=1day/' /etc/systemd/journald.conf \
-    && sed -ri '0,/^#?\s*(ForwardToConsole)\s*=\s*.*$/s//\1=yes/' /etc/systemd/journald.conf \
+    && sed -ri '0,/^#?\s*(ForwardToConsole)\s*=\s*.*$/s//\1=no/' /etc/systemd/journald.conf \
     && sed -ri '0,/^#?\s*(MaxLevelConsole)\s*=\s*.*$/s//\1=err/' /etc/systemd/journald.conf \
     && echo 'centos' | passwd --stdin root \
     && echo -e "*** Welcome to interactive tty of full CentOS operating system running on docker! ***\n\nLogin: root\nPass: centos\n" > /etc/issue \
