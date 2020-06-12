@@ -1,7 +1,6 @@
 FROM centos:7
 
-ENV container docker
-
+ENV container=docker
 
 # The package `systemd-sysv` and `initscripts`
 # are installed for providing backwards compatibility
@@ -37,14 +36,16 @@ RUN rm -f \
     && systemctl disable systemd-vconsole-setup.service \
     && systemctl disable systemd-udevd.service \
     && mkdir -p /etc/systemd/system/sys-fs-fuse-connections.mount.d/ \
-    && echo -e '[Unit]\nConditionPathExists=/sys/fs/fuse/connections\nConditionCapability=CAP_SYS_ADMIN\nConditionVirtualization=!private-users\n' > /etc/systemd/system/sys-fs-fuse-connections.mount.d/docker-virt.conf
+    && echo -e '[Unit]\nConditionPathExists=/sys/fs/fuse/connections\nConditionCapability=CAP_SYS_ADMIN\nConditionVirtualization=!private-users\n' > /etc/systemd/system/sys-fs-fuse-connections.mount.d/docker-virt.conf \
+    && mkdir -p /etc/systemd/system/console-getty.service.d/ \
+    && echo -e '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear --keep-baud console 115200,38400,9600 $TERM\n' > /etc/systemd/system/console-getty.service.d/docker-virt.conf
 
 
 # The service `docker-ipv6-hosts-cleanup` removes IPv6 entries from `/etc/hosts`
 # so daemons (e.g. postfix) do not expect these interfaces to be available.
 # IPv6 loopback is not supported at all with Docker for Mac (and probably Docker Desktop at all).
 RUN rm -f /etc/init.d/net* /run/nologin /var/run/nologin \
-    && echo -e "[Unit]\nDescription=Remove IPv6 hosts entries\nAfter=network.target\n\n[Service]\nType=oneshot\nRemainAfterExit=true\nStandardOutput=journal\nExecStart=/usr/bin/sed -r -i -c '/^[:0-9a-f]+\\\\\s+/d' /etc/hosts\n\n[Install]\nWantedBy=multi-user.target" > /etc/systemd/system/docker-ipv6-hosts-cleanup.service \
+    && echo -e "[Unit]\nDescription=Remove IPv6 hosts entries\nBefore=network.target\n\n[Service]\nType=oneshot\nRemainAfterExit=true\nStandardOutput=journal\nExecStart=/usr/bin/sed -r -i -c '/^[:0-9a-f]+\\\\\s+/d' /etc/hosts\n\n[Install]\nWantedBy=multi-user.target" > /etc/systemd/system/docker-ipv6-hosts-cleanup.service \
     && systemctl enable docker-ipv6-hosts-cleanup.service \
     && sed -ri '0,/^#?\s*(PermitRootLogin)\s+.*$/s//\1 yes/' /etc/ssh/sshd_config \
     && sed -ri '0,/^#?\s*(PubkeyAuthentication)\s+.*$/s//\1 yes/' /etc/ssh/sshd_config \
@@ -68,11 +69,12 @@ RUN rm -f /etc/init.d/net* /run/nologin /var/run/nologin \
     && echo -e "\nHint: You can terminate the container by shutting the system down - run the 'halt' command\n" > /etc/motd
 
 HEALTHCHECK --interval=3s --timeout=2m --start-period=4s --retries=15 CMD ["/usr/bin/systemctl", "is-system-running", "--quiet"]
+
 # This is the proper shutdown signal used by systemd init process
 # Vide: https://www.freedesktop.org/software/systemd/man/systemd.html#Signals
 STOPSIGNAL SIGRTMIN+4
 
-VOLUME ["/sys/fs/cgroup", "/tmp", "/run"]
+VOLUME ["/sys/fs/cgroup", "/tmp"]
 
 EXPOSE 22
 USER root

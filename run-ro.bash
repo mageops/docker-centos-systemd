@@ -7,12 +7,11 @@ set -e -x
 docker build --tag mageops/centos-systemd .
 
 docker run \
-    --rm \
     --interactive \
     --tty \
     --publish 322:22 \
     --tmpfs /tmp:exec \
-    --tmpfs /run \
+    --tmpfs /run:exec \
     --volume /sys/fs/cgroup:/sys/fs/cgroup:ro \
     --name centos-systemd \
         mageops/centos-systemd

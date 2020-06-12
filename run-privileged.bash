@@ -10,7 +10,6 @@ docker run \
     --tty \
     --publish 322:22 \
     --tmpfs /tmp:exec \
-    --tmpfs /run \
     --privileged \
     --name centos-systemd \
         mageops/centos-systemd
